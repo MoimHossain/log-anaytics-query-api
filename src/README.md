@@ -19,14 +19,41 @@ A simple .NET 8 Web API that allows querying Azure Log Analytics workspaces. Thi
 
 ## Authentication
 
-This API uses Azure's `DefaultAzureCredential` which automatically tries multiple authentication methods:
-1. Environment variables
-2. Managed Identity (when running in Azure)
-3. Azure CLI credentials
-4. Visual Studio credentials
-5. Azure PowerShell credentials
+This API uses Azure Service Principal authentication with client credentials flow. You need to configure the following authentication parameters:
 
-Make sure you have appropriate permissions to read from the Log Analytics workspace.
+**Required Configuration:**
+- Azure Client ID (Service Principal Application ID)
+- Azure Client Secret (Service Principal Password/Secret)
+- Azure Tenant ID (Directory ID)
+
+**Configuration Methods:**
+
+1. **Environment Variables (Recommended for production):**
+   ```bash
+   AZURE_CLIENT_ID=your-service-principal-client-id
+   AZURE_CLIENT_SECRET=your-service-principal-client-secret
+   AZURE_TENANT_ID=your-azure-tenant-id
+   ```
+
+2. **Configuration Files (for development):**
+   Update `appsettings.json` or `appsettings.Development.json`:
+   ```json
+   {
+     "AzureAuth": {
+       "ClientId": "your-service-principal-client-id",
+       "ClientSecret": "your-service-principal-client-secret",
+       "TenantId": "your-azure-tenant-id"
+     }
+   }
+   ```
+
+**Service Principal Setup:**
+1. Create a service principal in Azure Active Directory
+2. Grant the service principal "Log Analytics Reader" role on the target workspace(s)
+3. Generate a client secret for the service principal
+4. Use the Application (client) ID, client secret, and Directory (tenant) ID in your configuration
+
+Make sure your service principal has appropriate permissions to read from the Log Analytics workspace.
 
 ## API Endpoints
 
@@ -112,13 +139,6 @@ The API will be available at `https://localhost:7000` and `http://localhost:5000
 - `AZURE_CLIENT_ID`: Service principal client ID
 - `AZURE_CLIENT_SECRET`: Service principal client secret  
 - `AZURE_TENANT_ID`: Azure tenant ID
-
-### Alternative Authentication Methods
-
-When running locally, you can authenticate using:
-- Azure CLI: `az login`
-- Visual Studio: Sign in through Visual Studio
-- Azure PowerShell: `Connect-AzAccount`
 
 ## Example Usage
 

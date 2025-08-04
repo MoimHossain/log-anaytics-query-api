@@ -2,6 +2,7 @@ using Azure.Identity;
 using Azure.Monitor.Query;
 using LogAnalyticsQueryApi.Models;
 using LogAnalyticsQueryApi.Services;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,11 +21,32 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configure Azure authentication settings
+builder.Services.Configure<AzureAuthConfig>(options =>
+{
+    options.ClientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID") ?? builder.Configuration["AzureAuth:ClientId"] ?? string.Empty;
+    options.ClientSecret = Environment.GetEnvironmentVariable("AZURE_CLIENT_SECRET") ?? builder.Configuration["AzureAuth:ClientSecret"] ?? string.Empty;
+    options.TenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID") ?? builder.Configuration["AzureAuth:TenantId"] ?? string.Empty;
+});
+
 // Register Azure Monitor Query service
 builder.Services.AddSingleton<LogsQueryClient>(provider =>
 {
-    var credential = new DefaultAzureCredential();
-    return new LogsQueryClient(credential);
+    //var azureAuthConfig = provider.GetRequiredService<IOptions<AzureAuthConfig>>().Value;
+    
+    //if (string.IsNullOrWhiteSpace(azureAuthConfig.ClientId) || 
+    //    string.IsNullOrWhiteSpace(azureAuthConfig.ClientSecret) || 
+    //    string.IsNullOrWhiteSpace(azureAuthConfig.TenantId))
+    //{
+    //    throw new InvalidOperationException("Azure authentication configuration is incomplete. Please ensure AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, and AZURE_TENANT_ID environment variables are set or configured in appsettings.json");
+    //}
+    
+    //var credential = new ClientSecretCredential(
+    //    azureAuthConfig.TenantId,
+    //    azureAuthConfig.ClientId,
+    //    azureAuthConfig.ClientSecret);
+    var options = new LogsQueryClientOptions();
+    return new LogsQueryClient(new DefaultAzureCredential(), options);
 });
 
 builder.Services.AddScoped<ILogAnalyticsService, LogAnalyticsService>();

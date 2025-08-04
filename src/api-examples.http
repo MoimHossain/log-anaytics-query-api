@@ -3,7 +3,7 @@
 ### You can use this with VS Code REST Client extension or similar tools
 
 # Set base URL (update this to match your deployment)
-@baseUrl = http://localhost:5001
+@baseUrl = https://localhost:64919/
 
 ### Health Check
 GET {{baseUrl}}/api/loganalytics/health
@@ -30,10 +30,10 @@ Content-Type: application/json
 
 {
   "tableName": "Heartbeat",
-  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "workspaceId": "ef5eb16c-12c1-405e-a4c9-263b5af0c6c4",
   "startTime": "2024-08-01T00:00:00Z",
-  "endTime": "2024-08-01T01:00:00Z",
-  "additionalFilters": "where Computer contains 'web'",
+  "endTime": "2025-08-04T01:00:00Z",
+  "additionalFilters": "",
   "top": 50
 }
 

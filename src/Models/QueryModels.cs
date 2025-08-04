@@ -17,3 +17,10 @@ public class QueryResponse
     public object? Data { get; set; }
     public int? RowCount { get; set; }
 }
+
+public class AzureAuthConfig
+{
+    public string ClientId { get; set; } = string.Empty;
+    public string ClientSecret { get; set; } = string.Empty;
+    public string TenantId { get; set; } = string.Empty;
+}
