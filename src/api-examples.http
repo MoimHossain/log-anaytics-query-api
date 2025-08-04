@@ -1,0 +1,196 @@
+### Log Analytics Query API Examples
+### This file contains example HTTP requests for the Log Analytics Query API
+### You can use this with VS Code REST Client extension or similar tools
+
+# Set base URL (update this to match your deployment)
+@baseUrl = http://localhost:5001
+
+### Health Check
+GET {{baseUrl}}/api/loganalytics/health
+
+###
+
+### Basic Log Analytics Query - Azure Activity Logs
+POST {{baseUrl}}/api/loganalytics/query
+Content-Type: application/json
+
+{
+  "tableName": "AzureActivity",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "startTime": "2024-08-01T00:00:00Z",
+  "endTime": "2024-08-01T23:59:59Z",
+  "top": 10
+}
+
+###
+
+### Query with Additional Filters - Heartbeat Data
+POST {{baseUrl}}/api/loganalytics/query
+Content-Type: application/json
+
+{
+  "tableName": "Heartbeat",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "startTime": "2024-08-01T00:00:00Z",
+  "endTime": "2024-08-01T01:00:00Z",
+  "additionalFilters": "where Computer contains 'web'",
+  "top": 50
+}
+
+###
+
+### Performance Counter Query
+POST {{baseUrl}}/api/loganalytics/query
+Content-Type: application/json
+
+{
+  "tableName": "Perf",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "startTime": "2024-08-01T00:00:00Z",
+  "endTime": "2024-08-01T01:00:00Z",
+  "additionalFilters": "where CounterName == 'Processor Queue Length' | summarize avg(CounterValue) by Computer",
+  "top": 100
+}
+
+###
+
+### Azure Diagnostics with Resource Group Filter
+POST {{baseUrl}}/api/loganalytics/query
+Content-Type: application/json
+
+{
+  "tableName": "AzureDiagnostics",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "startTime": "2024-08-01T00:00:00Z",
+  "endTime": "2024-08-01T23:59:59Z",
+  "additionalFilters": "where ResourceGroup == 'production-rg' | where Level == 'Error'",
+  "top": 25
+}
+
+###
+
+### Syslog Query for Linux Systems
+POST {{baseUrl}}/api/loganalytics/query
+Content-Type: application/json
+
+{
+  "tableName": "Syslog",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "startTime": "2024-08-01T00:00:00Z",
+  "endTime": "2024-08-01T23:59:59Z",
+  "additionalFilters": "where SeverityLevel == 'err' | project TimeGenerated, Computer, ProcessName, SyslogMessage",
+  "top": 20
+}
+
+###
+
+### Windows Event Logs
+POST {{baseUrl}}/api/loganalytics/query
+Content-Type: application/json
+
+{
+  "tableName": "Event",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "startTime": "2024-08-01T00:00:00Z",
+  "endTime": "2024-08-01T23:59:59Z",
+  "additionalFilters": "where EventLevelName == 'Error' | project TimeGenerated, Computer, EventID, RenderedDescription",
+  "top": 15
+}
+
+###
+
+### Large Result Set Query (no limit)
+POST {{baseUrl}}/api/loganalytics/query
+Content-Type: application/json
+
+{
+  "tableName": "AzureActivity",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "startTime": "2024-08-01T00:00:00Z",
+  "endTime": "2024-08-01T01:00:00Z",
+  "additionalFilters": "where OperationNameValue contains 'Microsoft.Compute'",
+  "top": null
+}
+
+###
+
+### Custom KQL Query with Aggregation
+POST {{baseUrl}}/api/loganalytics/query
+Content-Type: application/json
+
+{
+  "tableName": "AzureActivity",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "startTime": "2024-08-01T00:00:00Z",
+  "endTime": "2024-08-01T23:59:59Z",
+  "additionalFilters": "summarize count() by OperationNameValue, ResourceGroup | order by count_ desc",
+  "top": 10
+}
+
+###
+
+### Query with Recent Time Range (last hour)
+POST {{baseUrl}}/api/loganalytics/query
+Content-Type: application/json
+
+{
+  "tableName": "Heartbeat",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "startTime": "2024-08-04T05:00:00Z",
+  "endTime": "2024-08-04T06:00:00Z",
+  "top": 100
+}
+
+###
+
+### Error Case - Missing Table Name
+POST {{baseUrl}}/api/loganalytics/query
+Content-Type: application/json
+
+{
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "startTime": "2024-08-01T00:00:00Z",
+  "endTime": "2024-08-01T23:59:59Z"
+}
+
+###
+
+### Error Case - Missing Workspace ID
+POST {{baseUrl}}/api/loganalytics/query
+Content-Type: application/json
+
+{
+  "tableName": "AzureActivity",
+  "startTime": "2024-08-01T00:00:00Z",
+  "endTime": "2024-08-01T23:59:59Z"
+}
+
+###
+
+### Error Case - Invalid Time Range
+POST {{baseUrl}}/api/loganalytics/query
+Content-Type: application/json
+
+{
+  "tableName": "AzureActivity",
+  "workspaceId": "12345678-1234-1234-1234-123456789012",
+  "startTime": "2024-08-01T23:59:59Z",
+  "endTime": "2024-08-01T00:00:00Z"
+}
+
+###
+
+# Notes:
+# 1. Replace the workspaceId with your actual Log Analytics workspace ID
+# 2. Adjust the time ranges to match your data
+# 3. Common table names include:
+#    - AzureActivity: Azure activity logs
+#    - AzureDiagnostics: Azure diagnostic logs  
+#    - Heartbeat: VM heartbeat data
+#    - Perf: Performance counters
+#    - Syslog: Linux syslog data
+#    - Event: Windows event logs
+#    - SecurityEvent: Windows security events
+#    - W3CIISLog: IIS web server logs
+# 4. The additionalFilters field accepts any valid KQL (Kusto Query Language) expressions
+# 5. Set top to null or omit it to get all results (be careful with large datasets)
