@@ -132,7 +132,7 @@ namespace LogAnalyticsQueryDemo
         {
             var kqlQuery = @"
                 OpenTelemetryMetrics_CL
-                | where TimeGenerated >= ago(30m)
+                | where TimeGenerated >= ago(5m)
                 | where MetricName in ('http_requests_total', 'http_request_duration_seconds')
                 | project TimeGenerated, MetricName, MetricValue, MetricUnit, ServiceName, ServiceVersion, Operation, StatusCode, Properties, TenantId
                 | order by TimeGenerated desc
