@@ -6,7 +6,6 @@ using LogAnalyticsQueryApi.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -42,8 +41,66 @@ if (app.Environment.IsDevelopment())
 // Enable CORS
 app.UseCors();
 
-app.UseAuthorization();
+// Minimal API endpoints
+app.MapPost("/api/loganalytics/query", async (QueryRequest request, ILogAnalyticsService logAnalyticsService, ILogger<Program> logger) =>
+{
+    if (string.IsNullOrWhiteSpace(request.TableName))
+    {
+        return Results.BadRequest(new QueryResponse 
+        { 
+            Success = false, 
+            ErrorMessage = "TableName is required" 
+        });
+    }
 
-app.MapControllers();
+    if (string.IsNullOrWhiteSpace(request.WorkspaceId))
+    {
+        return Results.BadRequest(new QueryResponse 
+        { 
+            Success = false, 
+            ErrorMessage = "WorkspaceId is required" 
+        });
+    }
+
+    if (request.StartTime >= request.EndTime)
+    {
+        return Results.BadRequest(new QueryResponse 
+        { 
+            Success = false, 
+            ErrorMessage = "StartTime must be earlier than EndTime" 
+        });
+    }
+
+    logger.LogInformation("Received query request for table: {TableName}, workspace: {WorkspaceId}", 
+        request.TableName, request.WorkspaceId);
+
+    var result = await logAnalyticsService.QueryLogAnalyticsAsync(request);
+
+    if (result.Success)
+    {
+        return Results.Ok(result);
+    }
+    else
+    {
+        return Results.Problem(detail: result.ErrorMessage, statusCode: 500);
+    }
+})
+.WithName("QueryLogAnalytics")
+.WithOpenApi(operation => new(operation)
+{
+    Summary = "Query Log Analytics workspace",
+    Description = "Execute a query against an Azure Log Analytics workspace with the specified table name and time range"
+});
+
+app.MapGet("/api/loganalytics/health", () =>
+{
+    return Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow });
+})
+.WithName("HealthCheck")
+.WithOpenApi(operation => new(operation)
+{
+    Summary = "Health check endpoint",
+    Description = "Returns the health status of the API"
+});
 
 app.Run();
